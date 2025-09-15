@@ -6,6 +6,7 @@ import AuthScreen from "./src/screens/AuthScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import MoistureDashboard from "./src/screens/MoistureDashboard";
+import AiAssistantScreen from "./src/screens/AiAssistanceScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +23,7 @@ export default function App() {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
         <Stack.Screen name="Moisture" component={MoistureDashboard} />
+        <Stack.Screen name="AiAssistant" component={AiAssistantScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

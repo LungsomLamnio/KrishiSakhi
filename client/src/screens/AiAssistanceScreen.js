@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { GEMINI_API_KEY } from "@env";
 import {
   View,
   Text,
@@ -24,21 +25,39 @@ const getOfflineResponse = (message) => {
 
 const sendToGemini = async (message) => {
   try {
-    const response = await fetch("https://YOUR_GEMINI_API_ENDPOINT", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer YOUR_GEMINI_API_KEY`,
-      },
-      body: JSON.stringify({ query: message }),
-    });
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `You are an agricultural assistant. Please answer the questions about farming, crops, agriculture specially regarding Kerala, India. Provide responses both in Malayalam and English. ${message}`,
+                },
+              ],
+            },
+          ],
+        }),
+      }
+    );
 
     if (!response.ok) {
+      const errBody = await response.text();
+      console.error("Gemini API error response body:", errBody);
       throw new Error("Failed to get response from Gemini API");
     }
 
     const data = await response.json();
-    return data.reply || "Sorry, I didn't understand that.";
+    return (
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Sorry, I didn't understand that."
+    );
   } catch (error) {
     console.error("Gemini API error:", error);
     return "Sorry, I am having trouble connecting to the service right now.";

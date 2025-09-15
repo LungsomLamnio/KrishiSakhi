@@ -17,7 +17,7 @@ const Homepage = ({ navigation }) => {
       {/* Get Started Button */}
       <Button
         title="Get Started"
-        onPress={() => navigation.navigate("Moisture")}
+        onPress={() => navigation.navigate("AiAssistant")}
         color="#228B22"
       />
     </View>
