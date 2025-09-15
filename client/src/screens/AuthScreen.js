@@ -9,7 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { sendOtp, verifyOtp } from "../api/auth"; // Make sure this path matches your project structure
+import { sendOtp, verifyOtp } from "../api/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AuthScreen({ navigation }) {
   const [phone, setPhone] = useState("");
@@ -42,10 +43,9 @@ export default function AuthScreen({ navigation }) {
     setLoading(true);
     try {
       const data = await verifyOtp(phone, otp);
-      // Store token securely, e.g. AsyncStorage.setItem('authToken', data.token)
-      // Navigate to app main screen/dashboard
+      await AsyncStorage.setItem("authToken", data.token);
       Alert.alert("Success", "Logged in successfully!");
-      navigation.replace("Home"); // Adjust 'Home' to your main app screen name
+      navigation.replace("Profile"); // Adjust 'Home' to your main app screen name
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {

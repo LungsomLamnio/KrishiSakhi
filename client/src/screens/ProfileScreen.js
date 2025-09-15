@@ -3,112 +3,143 @@ import {
   View,
   Text,
   TextInput,
-  Button,
+  TouchableOpacity,
   StyleSheet,
   Alert,
   ScrollView,
 } from "react-native";
 
 export default function ProfileScreen({ navigation }) {
-  // receive navigation prop
   const [profile, setProfile] = useState({
-    name: "Lungsom Lamnio",
-    email: "lungsomlamnio@gmail.com",
-    city: "Itanagar",
-    state: "Arunachal Pradesh",
-    farmSize: "2.5",
-    crops: "Wheat, Rice, Maize",
+    name: "",
+    city: "",
+    state: "",
   });
 
   const [saving, setSaving] = useState(false);
 
-  // Dummy save function to simulate save
   const saveProfile = () => {
+    if (!profile.name.trim()) {
+      Alert.alert("Validation error", "Please enter your name");
+      return;
+    }
+    if (!profile.city.trim()) {
+      Alert.alert("Validation error", "Please enter your city");
+      return;
+    }
+    if (!profile.state.trim()) {
+      Alert.alert("Validation error", "Please enter your state");
+      return;
+    }
+
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
-      Alert.alert("Success", "Profile saved (dummy)", [
+      Alert.alert("Success", "Profile saved", [
         {
           text: "OK",
-          onPress: () => navigation.replace("Dashboard"), // Navigate to Dashboard
+          onPress: () => navigation.replace("Dashboard"),
         },
       ]);
     }, 1500);
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>My Profile</Text>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={styles.header}>My Profile</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Name"
         value={profile.name}
         onChangeText={(text) => setProfile({ ...profile, name: text })}
+        placeholderTextColor="#7B8D7B"
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        value={profile.email}
-        onChangeText={(text) => setProfile({ ...profile, email: text })}
-      />
+
       <TextInput
         style={styles.input}
         placeholder="City"
         value={profile.city}
         onChangeText={(text) => setProfile({ ...profile, city: text })}
+        placeholderTextColor="#7B8D7B"
       />
+
       <TextInput
         style={styles.input}
         placeholder="State"
         value={profile.state}
         onChangeText={(text) => setProfile({ ...profile, state: text })}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Farm Size (in acres)"
-        keyboardType="numeric"
-        value={profile.farmSize}
-        onChangeText={(text) => setProfile({ ...profile, farmSize: text })}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Crops (comma separated)"
-        value={profile.crops}
-        onChangeText={(text) => setProfile({ ...profile, crops: text })}
+        placeholderTextColor="#7B8D7B"
       />
 
-      <Button
-        title={saving ? "Saving..." : "Save Profile"}
+      <TouchableOpacity
+        style={[styles.button, saving && styles.buttonDisabled]}
         onPress={saveProfile}
         disabled={saving}
-      />
+        activeOpacity={0.7}
+      >
+        <Text style={styles.buttonText}>
+          {saving ? "Saving..." : "Save Profile"}
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "#F6FFF2",
     flexGrow: 1,
+    paddingVertical: 40,
+    paddingHorizontal: 30,
+    backgroundColor: "#E9F5E1",
     justifyContent: "center",
   },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#228B22",
-    marginBottom: 24,
+  header: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#2E7D32",
     textAlign: "center",
+    marginBottom: 40,
+    letterSpacing: 1,
   },
   input: {
-    height: 50,
-    backgroundColor: "#fff",
-    borderColor: "#228B22",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 18,
+    height: 55,
+    borderRadius: 12,
+    backgroundColor: "#F4FBF1",
+    borderColor: "#81C784",
+    borderWidth: 1.5,
+    paddingHorizontal: 18,
+    fontSize: 18,
+    color: "#2E7D32",
+    marginBottom: 25,
+    shadowColor: "#a4d4a1",
+    shadowRadius: 3,
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 1, height: 2 },
+  },
+  button: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 16,
+    borderRadius: 50,
+    marginTop: 10,
+    elevation: 5,
+    shadowColor: "#388E3C",
+    shadowOpacity: 0.6,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  buttonDisabled: {
+    backgroundColor: "#A5D6A7",
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  buttonText: {
+    fontSize: 20,
+    color: "#fff",
+    fontWeight: "700",
+    textAlign: "center",
   },
 });

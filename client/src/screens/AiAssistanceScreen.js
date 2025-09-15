@@ -9,7 +9,9 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
+import * as Speech from "expo-speech";
 
 // Dummy offline AI response handler (Gemma)
 const getOfflineResponse = (message) => {
@@ -74,7 +76,12 @@ export default function AiAssistantScreen() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [online, setOnline] = useState(true); // toggle between Gemini (online) and Gemma (offline)
+  const [online, setOnline] = useState(true);
+
+  // Speak the AI response aloud using expo-speech
+  const speakResponse = (text) => {
+    Speech.speak(text, { language: "en-IN" });
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -90,12 +97,14 @@ export default function AiAssistantScreen() {
         ...prev,
         { id: (Date.now() + 1).toString(), sender: "Gemini", text: response },
       ]);
+      speakResponse(response);
     } else {
       const response = getOfflineResponse(input);
       setMessages((prev) => [
         ...prev,
         { id: (Date.now() + 1).toString(), sender: "Gemma", text: response },
       ]);
+      speakResponse(response);
     }
     setLoading(false);
   };
