@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { sendOtp, verifyOtp } from "../api/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { initDb, insertFarmerPhone } from "../db/db";
 
 export default function AuthScreen({ navigation }) {
   const [phone, setPhone] = useState("");
@@ -42,10 +43,33 @@ export default function AuthScreen({ navigation }) {
     }
     setLoading(true);
     try {
+      // 1. Verify OTP as before
       const data = await verifyOtp(phone, otp);
       await AsyncStorage.setItem("authToken", data.token);
-      Alert.alert("Success", "Logged in successfully!");
-      navigation.replace("Profile"); // Adjust 'Home' to your main app screen name
+
+      // 2. Call backend to check or create farmer
+      const response = await fetch(
+        "http://127.0.0.1:3000/api/farmers/check-or-create",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone }),
+        }
+      );
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to connect to server");
+      }
+
+      // You can use result.farmer for next steps as needed
+      Alert.alert(
+        "Success",
+        result.message === "User exists"
+          ? "Welcome back! Logged in successfully."
+          : "Account created! Logged in successfully."
+      );
+      navigation.replace("AiAssistant");
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 
 export default function ProfileScreen({ navigation }) {
@@ -15,10 +16,50 @@ export default function ProfileScreen({ navigation }) {
     city: "",
     state: "",
   });
-
+  const [loading, setLoading] = useState(true); // Loading while fetching
   const [saving, setSaving] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
-  const saveProfile = () => {
+  // Fetch user profile from backend on component mount
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      // TODO: replace URL with your backend API endpoint to fetch farmer profile
+      const response = await fetch(
+        "https://your-backend.com/api/farmers/profile",
+        {
+          method: "GET",
+          headers: {
+            // include auth token if needed
+            Authorization: `Bearer your_token_here`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+
+      const data = await response.json();
+      setProfile({
+        name: data.name || "",
+        city: data.city || "",
+        state: data.state || "",
+      });
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    // Validation
     if (!profile.name.trim()) {
       Alert.alert("Validation error", "Please enter your name");
       return;
@@ -33,16 +74,40 @@ export default function ProfileScreen({ navigation }) {
     }
 
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      Alert.alert("Success", "Profile saved", [
+    try {
+      // TODO: replace URL with your backend API endpoint to update farmer profile
+      const response = await fetch(
+        "https://your-backend.com/api/farmers/profile",
         {
-          text: "OK",
-          onPress: () => navigation.replace("Dashboard"),
-        },
-      ]);
-    }, 1500);
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer your_token_here`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(profile),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to save profile");
+      }
+
+      Alert.alert("Success", "Profile saved");
+      setEditMode(false);
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -51,40 +116,64 @@ export default function ProfileScreen({ navigation }) {
     >
       <Text style={styles.header}>My Profile</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={profile.name}
-        onChangeText={(text) => setProfile({ ...profile, name: text })}
-        placeholderTextColor="#7B8D7B"
-      />
+      {editMode ? (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Name"
+            value={profile.name}
+            onChangeText={(text) => setProfile({ ...profile, name: text })}
+            placeholderTextColor="#7B8D7B"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="City"
+            value={profile.city}
+            onChangeText={(text) => setProfile({ ...profile, city: text })}
+            placeholderTextColor="#7B8D7B"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="State"
+            value={profile.state}
+            onChangeText={(text) => setProfile({ ...profile, state: text })}
+            placeholderTextColor="#7B8D7B"
+          />
+          <TouchableOpacity
+            style={[styles.button, saving && styles.buttonDisabled]}
+            onPress={saveProfile}
+            disabled={saving}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.buttonText}>
+              {saving ? "Saving..." : "Save Profile"}
+            </Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <View style={styles.viewRow}>
+            <Text style={styles.label}>Name:</Text>
+            <Text style={styles.value}>{profile.name || "-"}</Text>
+          </View>
+          <View style={styles.viewRow}>
+            <Text style={styles.label}>City:</Text>
+            <Text style={styles.value}>{profile.city || "-"}</Text>
+          </View>
+          <View style={styles.viewRow}>
+            <Text style={styles.label}>State:</Text>
+            <Text style={styles.value}>{profile.state || "-"}</Text>
+          </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="City"
-        value={profile.city}
-        onChangeText={(text) => setProfile({ ...profile, city: text })}
-        placeholderTextColor="#7B8D7B"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="State"
-        value={profile.state}
-        onChangeText={(text) => setProfile({ ...profile, state: text })}
-        placeholderTextColor="#7B8D7B"
-      />
-
-      <TouchableOpacity
-        style={[styles.button, saving && styles.buttonDisabled]}
-        onPress={saveProfile}
-        disabled={saving}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.buttonText}>
-          {saving ? "Saving..." : "Save Profile"}
-        </Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setEditMode(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.buttonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -141,5 +230,28 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     textAlign: "center",
+  },
+  viewRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "#F4FBF1",
+    marginBottom: 20,
+    shadowColor: "#a4d4a1",
+    shadowRadius: 3,
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 1, height: 2 },
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#2E7D32",
+  },
+  value: {
+    fontSize: 18,
+    color: "#2E7D32",
+    maxWidth: "70%",
   },
 });

@@ -4,12 +4,12 @@ import {
   View,
   Text,
   TextInput,
-  Button,
+  TouchableOpacity,
   StyleSheet,
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import * as Speech from "expo-speech";
 
@@ -40,7 +40,14 @@ const sendToGemini = async (message) => {
             {
               parts: [
                 {
-                  text: `You are an agricultural assistant. Please answer the questions about farming, crops, agriculture specially regarding Kerala, India. Provide responses both in Malayalam and English. ${message}`,
+                  text: `
+                        Respond concisely and directly to this farming/agriculture question related to Kerala, India.
+                        - Do not introduce yourself or use phrases like "Okay, I can help you".
+                        - Do not use markdown or bold formatting (do not use ** or *). Use plain text only.
+                        - Give just the facts in a list or paragraph.
+                        - Include the answer in both Malayalam and English, and clearly label the Malayalam section.
+                        Question: ${message}
+                        `,
                 },
               ],
             },
@@ -70,7 +77,7 @@ export default function AiAssistantScreen() {
   const [messages, setMessages] = useState([
     {
       id: "1",
-      sender: "Gemini",
+      sender: "Sakhi",
       text: "Hello! How can I assist you with your farm today?",
     },
   ]);
@@ -95,7 +102,7 @@ export default function AiAssistantScreen() {
       const response = await sendToGemini(input);
       setMessages((prev) => [
         ...prev,
-        { id: (Date.now() + 1).toString(), sender: "Gemini", text: response },
+        { id: (Date.now() + 1).toString(), sender: "Sakhi", text: response },
       ]);
       speakResponse(response);
     } else {
@@ -115,14 +122,18 @@ export default function AiAssistantScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
-      <View style={styles.header}>
+      <View style={styles.headerSection}>
         <Text style={styles.title}>Krishi Sakhi AI Assistant</Text>
-        <Button
-          title={
-            online ? "Switch to Offline (Gemma)" : "Switch to Online (Gemini)"
-          }
+
+        <TouchableOpacity
+          style={[styles.toggleButton, online ? styles.online : styles.offline]}
           onPress={() => setOnline(!online)}
-        />
+          activeOpacity={0.8}
+        >
+          <Text style={styles.toggleText}>
+            {online ? "Switch to Offline (Gemma)" : "Switch to Online (Gemini)"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -152,50 +163,116 @@ export default function AiAssistantScreen() {
           onSubmitEditing={handleSend}
           returnKeyType="send"
         />
-        <Button
-          title={loading ? "..." : "Send"}
-          onPress={handleSend}
-          disabled={loading}
-        />
+        {loading ? (
+          <ActivityIndicator
+            size="small"
+            color="#228B22"
+            style={styles.loader}
+          />
+        ) : (
+          <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+            <Text style={styles.sendButtonText}>Send</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F6FFF2", padding: 10 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  container: { flex: 1, backgroundColor: "#F6FFF2", padding: 15 },
+  headerSection: {
+    marginBottom: 18,
     alignItems: "center",
-    marginBottom: 10,
   },
-  title: { fontSize: 22, fontWeight: "bold", color: "#228B22" },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginBottom: 10,
+    textAlign: "center",
+    letterSpacing: 0.5,
+  },
+  toggleButton: {
+    minWidth: 200,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 2,
+    shadowColor: "#228B22",
+    shadowOpacity: 0.18,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+    borderWidth: 1,
+    borderColor: "#ddd",
+    alignItems: "center",
+  },
+  online: {
+    backgroundColor: "#43a047",
+  },
+  offline: {
+    backgroundColor: "#757575",
+  },
+  toggleText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+    letterSpacing: 0.3,
+  },
   chatContainer: { paddingBottom: 20 },
   messageBox: {
-    padding: 10,
-    borderRadius: 8,
-    marginVertical: 5,
+    padding: 12,
+    borderRadius: 12,
+    marginVertical: 6,
     maxWidth: "80%",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
-  userMsg: { backgroundColor: "#D1FFC4", alignSelf: "flex-end" },
-  aiMsg: { backgroundColor: "#E5E5E5", alignSelf: "flex-start" },
-  sender: { fontWeight: "bold", marginBottom: 3 },
-  message: { fontSize: 16 },
+  userMsg: {
+    backgroundColor: "#D1FFC4",
+    alignSelf: "flex-end",
+    borderTopRightRadius: 0,
+  },
+  aiMsg: {
+    backgroundColor: "#E5E5E5",
+    alignSelf: "flex-start",
+    borderTopLeftRadius: 0,
+  },
+  sender: { fontWeight: "bold", marginBottom: 4, color: "#444" },
+  message: { fontSize: 16, color: "#333" },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderTopWidth: 1,
     borderColor: "#ccc",
-    padding: 5,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
   },
   input: {
     flex: 1,
-    height: 40,
-    backgroundColor: "#fff",
-    borderRadius: 8,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: "#228B22",
-    paddingHorizontal: 10,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: "#fafafa",
+  },
+  sendButton: {
+    backgroundColor: "#228B22",
+    borderRadius: 22,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginLeft: 12,
+  },
+  sendButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  loader: {
+    marginLeft: 12,
   },
 });
